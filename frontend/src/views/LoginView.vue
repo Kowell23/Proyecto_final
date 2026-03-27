@@ -8,7 +8,6 @@
       </div>
 
       <form class="auth-form" @submit.prevent="handleLogin">
-        <!-- Mensaje de error global -->
         <div v-if="errorMsg" class="alert alert-error">{{ errorMsg }}</div>
 
         <div class="form-group">
@@ -68,7 +67,6 @@ async function handleLogin() {
     await authStore.login(form.value.email, form.value.password)
     router.push({ name: 'Home' })
   } catch (err) {
-    // Muestra el mensaje del backend o uno genérico
     errorMsg.value = err.response?.data?.message || 'Error al iniciar sesión.'
   } finally {
     loading.value = false

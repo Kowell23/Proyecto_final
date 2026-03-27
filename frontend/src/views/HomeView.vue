@@ -1,6 +1,5 @@
 <template>
   <div class="home-wrapper">
-    <!-- Navbar -->
     <nav class="navbar">
       <div class="nav-brand">🍳 Recetas de Cocina</div>
       <div class="nav-user">
@@ -12,7 +11,6 @@
       </div>
     </nav>
 
-    <!-- Contenido principal -->
     <main class="home-main">
       <div class="welcome-card">
         <h2>¡Bienvenido, {{ authStore.user?.name }}! 🎉</h2>

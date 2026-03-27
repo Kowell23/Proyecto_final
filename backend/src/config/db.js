@@ -3,8 +3,6 @@ import dotenv from 'dotenv'
 
 dotenv.config()
 
-// Pool de conexiones — como una flota de taxis siempre disponibles
-// en lugar de llamar uno nuevo cada vez
 const pool = mysql.createPool({
   host:     process.env.DB_HOST,
   user:     process.env.DB_USER,

@@ -3,7 +3,6 @@
 </template>
 
 <style>
-/* ─── Variables globales de diseño ──────────────────────── */
 :root {
   --color-accent:  #e67e22;
   --color-bg:      #f4f4f5;
@@ -14,7 +13,6 @@
   --color-muted:   #71717a;
 }
 
-/* Modo oscuro automático según preferencia del sistema */
 @media (prefers-color-scheme: dark) {
   :root {
     --color-bg:     #111113;
@@ -26,7 +24,6 @@
   }
 }
 
-/* ─── Reset base ─────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 
 body {

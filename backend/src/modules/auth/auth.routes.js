@@ -4,11 +4,9 @@ import { authenticate } from '../../middlewares/auth.middleware.js'
 
 const router = Router()
 
-// Rutas públicas — no requieren token
 router.post('/register', register)
 router.post('/login',    login)
 
-// Ruta privada — requiere token válido
 router.get('/me', authenticate, getMe)
 
 export default router

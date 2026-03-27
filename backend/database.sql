@@ -1,16 +1,9 @@
--- ============================================================
--- RECETAS DE COCINA — Schema de Base de Datos
--- Autor: Nicolas Caicedo
--- Universidad Santiago de Cali
--- ============================================================
-
 CREATE DATABASE IF NOT EXISTS recetas_db
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
 USE recetas_db;
 
--- ─── TABLA: users ────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (
   id            INT AUTO_INCREMENT PRIMARY KEY,
   name          VARCHAR(100)  NOT NULL,
@@ -20,7 +13,6 @@ CREATE TABLE IF NOT EXISTS users (
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ─── TABLA: recipes ──────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS recipes (
   id           INT AUTO_INCREMENT PRIMARY KEY,
   title        VARCHAR(200) NOT NULL,
@@ -33,15 +25,12 @@ CREATE TABLE IF NOT EXISTS recipes (
   FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- ─── TABLA: ingredients ──────────────────────────────────────
 CREATE TABLE IF NOT EXISTS ingredients (
   id   INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL UNIQUE
 );
 
--- ─── TABLA: recipe_ingredients (tabla pivote N:M) ────────────
--- Una receta tiene muchos ingredientes
--- Un ingrediente puede estar en muchas recetas
+
 CREATE TABLE IF NOT EXISTS recipe_ingredients (
   recipe_id     INT         NOT NULL,
   ingredient_id INT         NOT NULL,
@@ -51,7 +40,6 @@ CREATE TABLE IF NOT EXISTS recipe_ingredients (
   FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE CASCADE
 );
 
--- ─── TABLA: favorites ────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS favorites (
   id         INT AUTO_INCREMENT PRIMARY KEY,
   user_id    INT NOT NULL,

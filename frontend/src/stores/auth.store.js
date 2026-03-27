@@ -2,8 +2,6 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '../services/api.js'
 
-// authStore — el "cerebro" de la sesión del usuario
-// Cualquier componente puede leer y modificar este estado
 export const useAuthStore = defineStore('auth', () => {
   // ─── Estado ─────────────────────────────────────────────────
   const token = ref(localStorage.getItem('token') || null)

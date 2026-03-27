@@ -1,7 +1,4 @@
 import { z } from 'zod'
-
-// Esquema de validación para REGISTRO
-// Zod lanza ZodError si algún campo no cumple — el errorHandler lo captura
 export const registerSchema = z.object({
   name: z
     .string({ required_error: 'El nombre es obligatorio' })
@@ -19,7 +16,6 @@ export const registerSchema = z.object({
     .max(100)
 })
 
-// Esquema de validación para LOGIN
 export const loginSchema = z.object({
   email: z
     .string({ required_error: 'El email es obligatorio' })

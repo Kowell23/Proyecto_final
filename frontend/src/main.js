@@ -5,7 +5,7 @@ import App from './App.vue'
 
 const app = createApp(App)
 
-app.use(createPinia()) // Siempre ANTES del router (el guard usa el store)
+app.use(createPinia())
 app.use(router)
 
 app.mount('#app')
