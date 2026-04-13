@@ -3,6 +3,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import { errorHandler } from './middlewares/error.middleware.js'
 import authRoutes from './modules/auth/auth.routes.js'
+import recipeRoutes from './modules/recipes/recipes.routes.js'
 
 dotenv.config()
 
@@ -16,6 +17,7 @@ app.use(cors({
 app.use(express.json())
 
 app.use('/api/auth', authRoutes)
+app.use('/api/recipes', recipeRoutes)
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', project: 'Recetas de Cocina API', version: '1.0.0' })
