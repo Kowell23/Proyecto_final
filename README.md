@@ -9,7 +9,7 @@
 
 ## 📋 Descripción
 
-Aplicación web fullstack para gestionar recetas de cocina. Permite filtrar recetas por ingredientes y marcar favoritos. Implementa autenticación completa con JWT, manejo de roles y base de datos relacional.
+Aplicación web fullstack para gestionar recetas de cocina. Permite explorar recetas, ver su detalle con ingredientes e instrucciones, y marcar favoritos. Implementa autenticación completa con JWT, manejo de roles (admin/usuario) y base de datos relacional.
 
 ---
 
@@ -33,30 +33,37 @@ Aplicación web fullstack para gestionar recetas de cocina. Permite filtrar rece
 recetas-app/
 ├── backend/
 │   ├── src/
-│   │   ├── config/db.js              # Conexión MySQL (pool)
+│   │   ├── config/db.js                    # Conexión MySQL (pool)
 │   │   ├── middlewares/
-│   │   │   ├── auth.middleware.js    # JWT + roles
-│   │   │   └── error.middleware.js   # Errores globales
+│   │   │   ├── auth.middleware.js           # JWT + roles (authenticate, authorizeRole)
+│   │   │   └── error.middleware.js          # Handler global de errores
 │   │   ├── modules/
-│   │   │   └── auth/
-│   │   │       ├── auth.controller.js
-│   │   │       └── auth.routes.js
+│   │   │   ├── auth/
+│   │   │   │   ├── auth.controller.js       # register, login, getMe
+│   │   │   │   └── auth.routes.js
+│   │   │   └── recipes/
+│   │   │       ├── recipes.controller.js    # CRUD + favoritos
+│   │   │       └── recipes.routes.js        # Rutas protegidas por rol
 │   │   ├── validators/
-│   │   │   └── auth.validator.js     # Esquemas Zod
-│   │   └── app.js                    # Servidor Express
-│   ├── database.sql                  # Schema + datos de prueba
+│   │   │   ├── auth.validator.js            # Esquemas Zod para auth
+│   │   │   └── recipes.validator.js         # Esquemas Zod para recetas
+│   │   └── app.js                           # Servidor Express
+│   ├── database.sql                         # Schema + datos de prueba
 │   ├── .env.example
 │   └── package.json
 │
 └── frontend/
     ├── src/
-    │   ├── services/api.js           # Axios + interceptores
-    │   ├── stores/auth.store.js      # Pinia — sesión global
-    │   ├── router/index.js           # Rutas + Navigation Guards
+    │   ├── services/api.js                  # Axios + interceptores JWT
+    │   ├── stores/auth.store.js             # Pinia — sesión global
+    │   ├── router/index.js                  # Rutas + Navigation Guards
     │   ├── views/
     │   │   ├── LoginView.vue
     │   │   ├── RegisterView.vue
-    │   │   └── HomeView.vue
+    │   │   ├── HomeView.vue
+    │   │   ├── RecipesView.vue              # Listado de recetas + favoritos
+    │   │   ├── RecipeDetailView.vue         # Detalle con ingredientes
+    │   │   └── AdminView.vue                # Panel admin (solo rol admin)
     │   ├── App.vue
     │   └── main.js
     └── package.json
@@ -68,8 +75,8 @@ recetas-app/
 
 ### 1. Clonar el repositorio
 ```bash
-git clone https://github.com/tu-usuario/recetas-app.git
-cd recetas-app
+git clone https://github.com/Kowell23/Proyecto_final.git
+cd Proyecto_final
 ```
 
 ### 2. Configurar la base de datos
@@ -101,7 +108,9 @@ npm run dev
 
 ---
 
-## 🔐 Endpoints de Autenticación
+## 🔐 Endpoints de la API
+
+### Autenticación
 
 | Método | Ruta | Descripción | Auth |
 |--------|------|-------------|------|
@@ -109,20 +118,24 @@ npm run dev
 | POST | `/api/auth/login` | Iniciar sesión | No |
 | GET | `/api/auth/me` | Obtener perfil propio | JWT |
 
+### Recetas
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| GET | `/api/recipes` | Listar todas las recetas | JWT |
+| GET | `/api/recipes/:id` | Ver detalle de una receta | JWT |
+| POST | `/api/recipes` | Crear receta | Admin |
+| PUT | `/api/recipes/:id` | Editar receta | Admin |
+| DELETE | `/api/recipes/:id` | Eliminar receta | Admin |
+| GET | `/api/recipes/favorites` | Ver mis favoritos | JWT |
+| POST | `/api/recipes/:id/favorites` | Añadir a favoritos | JWT |
+| DELETE | `/api/recipes/:id/favorites` | Quitar de favoritos | JWT |
+
 ### Ejemplo de registro
 ```json
 POST /api/auth/register
 {
   "name": "Nicolás Caicedo",
-  "email": "nicolas@email.com",
-  "password": "miclave123"
-}
-```
-
-### Ejemplo de login
-```json
-POST /api/auth/login
-{
   "email": "nicolas@email.com",
   "password": "miclave123"
 }
@@ -160,8 +173,31 @@ POST /api/auth/login
 - [x] Contraseñas cifradas con bcryptjs (saltRounds: 10)
 - [x] Validación de datos con Zod
 - [x] Estado global con Pinia (`authStore`)
-- [x] Navigation Guards en Vue Router
+- [x] Navigation Guards en Vue Router (rutas privadas y de admin)
 - [x] Axios con interceptores (adjunta JWT automáticamente)
-- [x] API REST estructurada
+- [x] API REST estructurada con módulos separados
 - [x] Base de datos MySQL relacional
 - [x] Controlador de errores global en Express
+
+---
+
+## 🧠 Decisiones técnicas
+
+| Decisión | Por qué |
+|---|---|
+| MySQL sobre MongoDB | Los datos tienen relaciones claras entre recetas, ingredientes y usuarios — una BD relacional es la opción correcta |
+| Pinia sobre props/events | Evita prop drilling y centraliza la sesión en toda la app desde un solo store |
+| Zod en backend | Valida y sanitiza datos antes de tocar la base de datos, previniendo inyecciones y datos corruptos |
+| Módulos separados por feature | Cada módulo tiene su propio controller, routes y validator — más mantenible y escalable |
+| `authorizeRole` como middleware reutilizable | Se puede aplicar en cualquier ruta sin repetir lógica de verificación de roles |
+| Guard `requiresAdmin` en el router | El frontend no espera al backend para bloquear rutas — la protección ocurre en dos capas |
+
+---
+
+## 📝 Conclusiones
+
+- **JWT** enseña cómo funciona la autenticación stateless — el servidor no guarda sesión, toda la información del usuario viaja firmada dentro del token.
+- **El sistema de roles** demuestra que la seguridad no es solo login: es controlar qué puede hacer cada usuario dentro del sistema, tanto en el backend (middleware) como en el frontend (guards).
+- **Pinia** elimina la necesidad de pasar props entre componentes — el estado de sesión está disponible en cualquier vista sin importar la profundidad del árbol de componentes.
+- **Separar el proyecto en módulos** desde el inicio hace el código mantenible: agregar una nueva funcionalidad significa crear su propio módulo sin tocar los existentes.
+- **La validación con Zod** en el backend es la última línea de defensa antes de la base de datos — nunca se debe confiar únicamente en la validación del frontend.
