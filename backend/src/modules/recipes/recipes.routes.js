@@ -1,6 +1,5 @@
 import { Router } from 'express'
-import { authenticate } from '../../middlewares/auth.middleware.js'
-import { authorizeRole } from '../../middlewares/auth.middleware.js'
+import { authenticate, authorizeRole } from '../../middlewares/auth.middleware.js'
 import {
   getAllRecipes,
   getRecipeById,
