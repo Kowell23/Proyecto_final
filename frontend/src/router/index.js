@@ -10,7 +10,7 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: () => import('../views/LoginView.vue'),
-    meta: { requiresGuest: true } // Solo para NO autenticados
+    meta: { requiresGuest: true }
   },
   {
     path: '/register',
@@ -22,7 +22,25 @@ const routes = [
     path: '/home',
     name: 'Home',
     component: () => import('../views/HomeView.vue'),
-    meta: { requiresAuth: true } // Solo para autenticados
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/recipes',
+    name: 'Recipes',
+    component: () => import('../views/RecipesView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/recipes/:id',
+    name: 'RecipeDetail',
+    component: () => import('../views/RecipeDetailView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: () => import('../views/AdminView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
   }
 ]
 
@@ -39,6 +57,9 @@ router.beforeEach((to) => {
   }
 
   if (to.meta.requiresGuest && auth.isAuthenticated) {
+    return { name: 'Home' }
+  }
+  if (to.meta.requiresAdmin && !auth.isAdmin) {
     return { name: 'Home' }
   }
 })
