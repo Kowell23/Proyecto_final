@@ -18,6 +18,7 @@
           Has iniciado sesión correctamente. Tu cuenta tiene el rol
           <strong>{{ authStore.user?.role }}</strong>.
         </p>
+
         <div class="info-grid">
           <div class="info-item">
             <span class="info-label">Email</span>
@@ -35,13 +36,22 @@
           </div>
         </div>
 
-        <div class="coming-soon">
-          <h3>🚧 Próximas funcionalidades</h3>
-          <ul>
-            <li>📋 Listado de recetas con filtro por ingredientes</li>
-            <li>❤️ Marcar recetas como favoritas</li>
-            <li>➕ Crear y editar recetas (solo admin)</li>
-          </ul>
+        <div class="nav-cards">
+          <div class="nav-card" @click="router.push('/recipes')">
+            <span class="nav-card-icon">📋</span>
+            <h3>Ver Recetas</h3>
+            <p>Explora todas las recetas disponibles y guarda tus favoritas.</p>
+          </div>
+
+          <div
+            v-if="authStore.isAdmin"
+            class="nav-card admin"
+            @click="router.push('/admin')"
+          >
+            <span class="nav-card-icon">🛠️</span>
+            <h3>Panel Admin</h3>
+            <p>Crea, edita y elimina recetas del sistema.</p>
+          </div>
         </div>
       </div>
     </main>
@@ -115,11 +125,25 @@ function handleLogout() {
 .info-label { font-size: 0.85rem; font-weight: 600; color: var(--color-muted); }
 .info-value { font-size: 0.9rem; color: var(--color-text); }
 .token-preview { font-family: monospace; font-size: 0.78rem; color: var(--color-accent); }
-.coming-soon {
+.nav-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
   border-top: 1px solid var(--color-border);
   padding-top: 1.5rem;
 }
-.coming-soon h3 { margin: 0 0 1rem; color: var(--color-text); font-size: 1rem; }
-.coming-soon ul { margin: 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
-.coming-soon li { color: var(--color-muted); font-size: 0.9rem; }
+.nav-card {
+  padding: 1.5rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.nav-card:hover { border-color: var(--color-accent); transform: translateY(-2px); }
+.nav-card.admin { border-color: #fef3c7; background: #fffbeb; }
+.nav-card.admin:hover { border-color: #f59e0b; }
+.nav-card-icon { font-size: 2rem; }
+.nav-card h3 { margin: .5rem 0 .3rem; color: var(--color-text); }
+.nav-card p { font-size: .85rem; color: var(--color-muted); margin: 0; }
 </style>
