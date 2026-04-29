@@ -1,33 +1,22 @@
 <template>
-  <div id="app-root">
-    <Navbar v-if="showNavbar" />
-    <main :class="{ 'with-navbar': showNavbar }">
-      <RouterView />
-    </main>
-  </div>
+  <!--
+    App.vue ahora es el punto de entrada puro.
+    Todo el layout (navbar, footer, fondo) vive en los layouts.
+    RouterView inyecta aquí AuthLayout o MainLayout según la ruta.
+  -->
+  <RouterView />
 </template>
-
-<script setup>
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import Navbar from './components/Navbar.vue'
-
-const route = useRoute()
-const showNavbar = computed(() => !['Login', 'Register'].includes(route.name))
-</script>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
+/* ── Variables globales de diseño ─────────────────────────────── */
 :root {
   --color-primary:        #C9B8E8;
   --color-primary-dark:   #7B5EA7;
   --color-primary-light:  #EEE6FF;
   --color-secondary:      #F5B8C8;
   --color-secondary-light:#FFEEF3;
-  --color-peach:          #FFD4A8;
-  --color-peach-light:    #FFF3E8;
-  --color-mint:           #B8E8D0;
   --color-bg:             #FDF6FF;
   --color-card:           #FFFFFF;
   --color-border:         #E8DEFF;
@@ -47,8 +36,6 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
-
-.with-navbar { padding-top: var(--navbar-height); }
 
 a { color: var(--color-primary-dark); text-decoration: none; }
 
