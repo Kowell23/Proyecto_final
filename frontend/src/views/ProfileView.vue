@@ -95,7 +95,6 @@ function handleLogout() {
 }
 .profile-role.admin { background: #FFF3E8; color: #C27A2E; }
 .profile-role.user  { background: var(--color-primary-light); color: var(--color-primary-dark); }
-
 .profile-info { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; text-align: left; }
 .info-row {
   display: flex;
@@ -109,7 +108,6 @@ function handleLogout() {
 .info-icon { font-size: 1.3rem; }
 .info-label { display: block; font-size: .75rem; font-weight: 700; color: var(--color-muted); text-transform: uppercase; letter-spacing: .5px; }
 .info-value { display: block; font-size: .95rem; font-weight: 700; color: var(--color-text); }
-
 .btn-logout {
   width: 100%;
   padding: .85rem;

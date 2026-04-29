@@ -51,10 +51,9 @@ function openEdit(recipe) {
 }
 
 async function submitForm() {
-  errorMsg.value  = null
+  errorMsg.value   = null
   successMsg.value = null
 
-  // Parsear ingredientes desde texto plano "Arroz:2 tazas, Pollo:500g"
   const ingredients = form.value.ingredients
     ? form.value.ingredients.split(',').map(i => {
         const [name, quantity] = i.split(':')
@@ -101,33 +100,26 @@ async function deleteRecipe(id) {
     <p v-if="successMsg" class="success">{{ successMsg }}</p>
     <p v-if="errorMsg"   class="error">{{ errorMsg }}</p>
 
-    <!-- Formulario -->
+    <!-- Formulario crear/editar -->
     <div v-if="showForm" class="form-card">
       <h2>{{ editMode ? 'Editar Receta' : 'Nueva Receta' }}</h2>
-
       <input v-model="form.title"        placeholder="Título *" />
       <input v-model="form.category"     placeholder="Categoría" />
       <input v-model="form.image_url"    placeholder="URL de imagen" />
       <textarea v-model="form.description"  placeholder="Descripción" rows="2" />
       <textarea v-model="form.instructions" placeholder="Instrucciones *" rows="4" />
-      <input
-        v-model="form.ingredients"
-        placeholder="Ingredientes: Arroz:2 tazas, Pollo:500g"
-      />
-
+      <input v-model="form.ingredients"  placeholder="Ingredientes: Arroz:2 tazas, Pollo:500g" />
       <div class="form-actions">
-        <button @click="submitForm"        class="btn-save">Guardar</button>
-        <button @click="showForm = false"  class="btn-cancel">Cancelar</button>
+        <button @click="submitForm"       class="btn-save">Guardar</button>
+        <button @click="showForm = false" class="btn-cancel">Cancelar</button>
       </div>
     </div>
 
-    <!-- Tabla de recetas -->
+    <!-- Tabla -->
     <p v-if="loading">Cargando...</p>
     <table v-else class="recipes-table">
       <thead>
-        <tr>
-          <th>ID</th><th>Título</th><th>Categoría</th><th>Autor</th><th>Acciones</th>
-        </tr>
+        <tr><th>ID</th><th>Título</th><th>Categoría</th><th>Autor</th><th>Acciones</th></tr>
       </thead>
       <tbody>
         <tr v-for="recipe in recipes" :key="recipe.id">
@@ -136,8 +128,8 @@ async function deleteRecipe(id) {
           <td>{{ recipe.category || '—' }}</td>
           <td>{{ recipe.author }}</td>
           <td>
-            <button @click="openEdit(recipe)"      class="btn-edit">✏️</button>
-            <button @click="deleteRecipe(recipe.id)" class="btn-delete">🗑️</button>
+            <button @click="openEdit(recipe)"         class="btn-edit">✏️</button>
+            <button @click="deleteRecipe(recipe.id)"  class="btn-delete">🗑️</button>
           </td>
         </tr>
       </tbody>
@@ -148,17 +140,18 @@ async function deleteRecipe(id) {
 <style scoped>
 .admin-page { max-width: 1000px; margin: 0 auto; padding: 2rem; }
 .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-.btn-create { background: #7c3aed; color: white; border: none; padding: .6rem 1.2rem; border-radius: 8px; cursor: pointer; }
+.btn-create { background: var(--color-primary-dark); color: white; border: none; padding: .6rem 1.2rem; border-radius: 8px; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700; }
 .form-card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,.1); margin-bottom: 2rem; display: flex; flex-direction: column; gap: .8rem; }
-input, textarea { padding: .6rem; border: 1px solid #ddd; border-radius: 8px; font-size: .95rem; width: 100%; box-sizing: border-box; }
+.form-card input, .form-card textarea { padding: .6rem; border: 1.5px solid var(--color-border); border-radius: 8px; font-size: .95rem; width: 100%; font-family: 'Nunito', sans-serif; box-sizing: border-box; }
+.form-card input:focus, .form-card textarea:focus { outline: none; border-color: var(--color-primary-dark); }
 .form-actions { display: flex; gap: 1rem; }
-.btn-save   { background: #16a34a; color: white; border: none; padding: .6rem 1.2rem; border-radius: 8px; cursor: pointer; }
-.btn-cancel { background: #e5e7eb; border: none; padding: .6rem 1.2rem; border-radius: 8px; cursor: pointer; }
+.btn-save   { background: #16a34a; color: white; border: none; padding: .6rem 1.2rem; border-radius: 8px; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700; }
+.btn-cancel { background: #e5e7eb; border: none; padding: .6rem 1.2rem; border-radius: 8px; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700; }
 .recipes-table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
-th { background: #7c3aed; color: white; padding: .8rem 1rem; text-align: left; }
+th { background: var(--color-primary-dark); color: white; padding: .8rem 1rem; text-align: left; }
 td { padding: .8rem 1rem; border-bottom: 1px solid #f0f0f0; }
 .btn-edit   { background: none; border: none; cursor: pointer; font-size: 1.1rem; margin-right: .5rem; }
 .btn-delete { background: none; border: none; cursor: pointer; font-size: 1.1rem; }
-.success { color: #16a34a; font-weight: 600; }
-.error   { color: red; }
+.success { color: #16a34a; font-weight: 700; margin-bottom: 1rem; }
+.error   { color: #C0392B; font-weight: 700; margin-bottom: 1rem; }
 </style>
