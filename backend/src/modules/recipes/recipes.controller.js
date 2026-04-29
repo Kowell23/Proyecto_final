@@ -62,7 +62,7 @@ export const createRecipe = async (req, res, next) => {
           [ing.name]
         )
         const [[{ id: ingId }]] = await pool.query(
-          'SELECT id FROM ingredients WHERE name = ?',
+          'SELECT id FROM ingredients WHERE name = ?', //no tener modelos, porque los controladores solamente reciben info. validan y envian respuesta
           [ing.name]
         )
         await pool.query(
