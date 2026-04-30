@@ -5,42 +5,34 @@ import { useAuthStore } from '../stores/auth.store.js'
 import AuthLayout from '../layouts/AuthLayout.vue'
 import MainLayout from '../layouts/MainLayout.vue'
 
-// ── Vistas de autenticación ───────────────────────────────────────
+// ── Auth ──────────────────────────────────────────────────────────
 import LoginView    from '../views/auth/LoginView.vue'
 import RegisterView from '../views/auth/RegisterView.vue'
 
-// ── Vistas de recetas ─────────────────────────────────────────────
+// ── Recetas ───────────────────────────────────────────────────────
 import HomeView         from '../views/recipes/HomeView.vue'
 import RecipesView      from '../views/recipes/RecipesView.vue'
 import RecipeDetailView from '../views/recipes/RecipeDetailView.vue'
 import FavoritesView    from '../views/recipes/FavoritesView.vue'
 
-// ── Vistas individuales ───────────────────────────────────────────
+// ── Individuales ──────────────────────────────────────────────────
 import ProfileView from '../views/ProfileView.vue'
 import AdminView   from '../views/AdminView.vue'
 
 // ─────────────────────────────────────────────────────────────────
-//  RUTAS ANIDADAS (Nested Routes)
+//  RUTAS ANIDADAS — dos familias según su layout:
 //
-//  Estructura visual:
+//  AuthLayout  → sin navbar (login, register)
+//  MainLayout  → con navbar + footer (todo lo demás)
 //
-//  AuthLayout              MainLayout
-//  └── /login              ├── /home          (guest, user, admin)
-//  └── /register           ├── /recipes       (guest, user, admin)
-//                          ├── /recipes/:id   (guest, user, admin)
-//                          ├── /favorites     (user, admin)
-//                          ├── /profile       (user, admin)
-//                          └── /admin         (admin)
-//
-//  meta.requiresGuest  → redirige al home si ya hay sesión
-//  meta.requiresAuth   → redirige al login si no hay sesión
-//  meta.requiresAdmin  → redirige al home si no es admin
+//  meta.requiresGuest  → si ya hay sesión activa → redirige a Home
+//  meta.requiresAuth   → si NO hay sesión        → redirige a Login
+//  meta.requiresAdmin  → si NO es admin          → redirige a Home
 // ─────────────────────────────────────────────────────────────────
-
 const routes = [
   { path: '/', redirect: '/home' },
 
-  // ── Familia AUTH (sin navbar) ─────────────────────────────────
+  // ── Familia AUTH (sin navbar ni footer) ───────────────────────
   {
     path: '/',
     component: AuthLayout,
@@ -49,7 +41,7 @@ const routes = [
         path: 'login',
         name: 'Login',
         component: LoginView,
-        meta: { requiresGuest: true }, // si ya hay sesión → va a Home
+        meta: { requiresGuest: true },
       },
       {
         path: 'register',
@@ -65,38 +57,17 @@ const routes = [
     path: '/',
     component: MainLayout,
     children: [
-      // Públicas: cualquier visitante puede entrar
-      {
-        path: 'home',
-        name: 'Home',
-        component: HomeView,
-      },
-      {
-        path: 'recipes',
-        name: 'Recipes',
-        component: RecipesView,
-      },
-      {
-        path: 'recipes/:id',
-        name: 'RecipeDetail',
-        component: RecipeDetailView,
-      },
+      // Públicas — cualquier visitante (guest, user, admin)
+      { path: 'home',        name: 'Home',        component: HomeView         },
+      { path: 'recipes',     name: 'Recipes',     component: RecipesView      },
+      { path: 'recipes/:id', name: 'RecipeDetail', component: RecipeDetailView },
 
-      // Protegidas: solo usuarios con sesión (user o admin)
-      {
-        path: 'favorites',
-        name: 'Favorites',
-        component: FavoritesView,
-        meta: { requiresAuth: true },
-      },
-      {
-        path: 'profile',
-        name: 'Profile',
-        component: ProfileView,
-        meta: { requiresAuth: true },
-      },
+      // Protegidas — solo user y admin
+      { path: 'favorites', name: 'Favorites', component: FavoritesView, meta: { requiresAuth: true } },
+      { path: 'profile',   name: 'Profile',   component: ProfileView,   meta: { requiresAuth: true } },
 
-      // Solo admin
+      // Exclusiva — solo admin
+      // requiresAdmin bloquea a cualquier user normal que escriba /admin en la URL
       {
         path: 'admin',
         name: 'Admin',
@@ -113,27 +84,26 @@ const router = createRouter({
   scrollBehavior: () => ({ top: 0 }),
 })
 
-// ── Navigation Guard: gestión de roles ───────────────────────────
-// Se ejecuta ANTES de cada cambio de ruta.
+// ── Navigation Guard ─────────────────────────────────────────────
+// Se ejecuta ANTES de cargar cualquier ruta. Tres checks en orden:
 router.beforeEach((to) => {
   const auth = useAuthStore()
 
-  // 1. Ruta solo para visitantes → si ya hay sesión, manda al home
+  // 1. Página de auth + ya logueado → no tiene sentido, manda al Home
   if (to.meta.requiresGuest && auth.isAuthenticated) {
     return { name: 'Home' }
   }
 
-  // 2. Ruta que requiere sesión → si no hay token, manda al login
+  // 2. Página protegida + sin sesión → manda al Login
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     return { name: 'Login' }
   }
 
-  // 3. Ruta exclusiva de admin → si no es admin, manda al home
+  // 3. Página de admin + role !== 'admin' → manda al Home
+  //    Cubre el caso: user normal escribe /admin en la barra del navegador
   if (to.meta.requiresAdmin && !auth.isAdmin) {
     return { name: 'Home' }
   }
-
-  // Si todo está bien → deja pasar
 })
 
 export default router
