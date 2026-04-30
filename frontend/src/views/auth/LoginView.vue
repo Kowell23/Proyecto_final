@@ -1,6 +1,7 @@
 <template>
   <div class="auth-wrapper">
     <div class="auth-card">
+
       <div class="auth-header">
         <span class="auth-icon">🍳</span>
         <h1 class="auth-title">Recetas de Cocina</h1>
@@ -35,16 +36,16 @@
         </div>
 
         <button type="submit" class="btn-primary" :disabled="loading">
-          <span v-if="loading">Iniciando sesión...</span>
-          <span v-else>Iniciar sesión</span>
+          {{ loading ? 'Iniciando sesión...' : 'Iniciar sesión' }}
         </button>
       </form>
 
-      <!-- Acceso rápido como visitante -->
-      <div class="guest-divider">
-        <span>o</span>
-      </div>
-      <button @click="$router.push({ name: 'Home' })" class="btn-guest-access">
+      <!-- Separador -->
+      <div class="divider"><span>o</span></div>
+
+      <!-- ✅ Botón para explorar sin cuenta -->
+      <!-- Navega a /home que es una ruta pública — no requiere sesión -->
+      <button @click="$router.push({ name: 'Home' })" class="btn-explore">
         👀 Explorar sin registrarse
       </button>
 
@@ -52,6 +53,7 @@
         ¿No tienes cuenta?
         <RouterLink to="/register">Regístrate aquí</RouterLink>
       </p>
+
     </div>
   </div>
 </template>
@@ -59,6 +61,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+// ✅ Import corregido: LoginView está en views/auth/ → necesita dos niveles arriba
 import { useAuthStore } from '../../stores/auth.store.js'
 
 const router    = useRouter()
@@ -100,60 +103,68 @@ async function handleLogin() {
   max-width: 420px;
 }
 .auth-header { text-align: center; margin-bottom: 2rem; }
-.auth-icon { font-size: 3rem; }
-.auth-title { font-size: 1.6rem; font-weight: 700; margin: 0.5rem 0 0.25rem; color: var(--color-text); }
-.auth-subtitle { color: var(--color-muted); font-size: 0.9rem; margin: 0; }
+.auth-icon     { font-size: 3rem; display: block; }
+.auth-title    { font-size: 1.6rem; font-weight: 700; margin: .5rem 0 .25rem; color: var(--color-text); }
+.auth-subtitle { color: var(--color-muted); font-size: .9rem; margin: 0; }
+
 .auth-form { display: flex; flex-direction: column; gap: 1.25rem; }
-.form-group { display: flex; flex-direction: column; gap: 0.4rem; }
-.form-group label { font-size: 0.9rem; font-weight: 600; color: var(--color-text); }
+.form-group { display: flex; flex-direction: column; gap: .4rem; }
+.form-group label { font-size: .9rem; font-weight: 600; color: var(--color-text); }
 .form-group input {
-  padding: 0.75rem 1rem;
+  padding: .75rem 1rem;
   border: 1.5px solid var(--color-border);
   border-radius: 8px;
   font-size: 1rem;
   background: var(--color-input);
   color: var(--color-text);
-  transition: border-color 0.2s;
+  transition: border-color .2s;
 }
 .form-group input:focus { outline: none; border-color: var(--color-accent); }
+
 .btn-primary {
-  padding: 0.85rem;
+  padding: .85rem;
   background: var(--color-accent);
   color: #fff;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.2s;
-  margin-top: 0.5rem;
+  transition: opacity .2s;
+  margin-top: .5rem;
+  font-family: 'Nunito', sans-serif;
 }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-.btn-primary:hover:not(:disabled) { opacity: 0.88; }
+.btn-primary:disabled { opacity: .6; cursor: not-allowed; }
+.btn-primary:hover:not(:disabled) { opacity: .88; }
+
 .alert-error {
   background: #fde8e8;
   color: #c0392b;
   border: 1px solid #f5c6c6;
   border-radius: 8px;
-  padding: 0.75rem 1rem;
-  font-size: 0.9rem;
+  padding: .75rem 1rem;
+  font-size: .9rem;
 }
-.guest-divider {
+
+/* Separador "o" */
+.divider {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin: 1.25rem 0 .75rem;
+  margin: 1.5rem 0 1rem;
   color: var(--color-muted);
   font-size: .85rem;
 }
-.guest-divider::before,
-.guest-divider::after {
+.divider::before,
+.divider::after {
   content: '';
   flex: 1;
   height: 1px;
   background: var(--color-border);
 }
-.btn-guest-access {
+
+/* Botón explorar */
+.btn-explore {
   width: 100%;
   padding: .75rem;
   border-radius: 8px;
@@ -166,7 +177,17 @@ async function handleLogin() {
   cursor: pointer;
   transition: all .2s;
 }
-.btn-guest-access:hover { background: var(--color-primary-light); color: var(--color-primary-dark); border-color: var(--color-primary); }
-.auth-footer { text-align: center; margin-top: 1.5rem; color: var(--color-muted); font-size: 0.9rem; }
+.btn-explore:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  border-color: var(--color-primary);
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: var(--color-muted);
+  font-size: .9rem;
+}
 .auth-footer a { color: var(--color-accent); font-weight: 600; text-decoration: none; }
 </style>
