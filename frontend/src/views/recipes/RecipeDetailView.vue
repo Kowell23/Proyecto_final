@@ -1,99 +1,74 @@
 <template>
-  <div class="recipes-page">
+  <div class="detail-page">
 
-    <!-- Modal visitante -->
-    <div v-if="showGuestModal" class="modal-overlay" @click.self="showGuestModal = false">
-      <div class="modal-card">
-        <span class="modal-icon">🔐</span>
-        <h2>¡Necesitas una cuenta!</h2>
-        <p>Para guardar recetas favoritas debes iniciar sesión o registrarte.</p>
-        <div class="modal-actions">
-          <button @click="$router.push({ name: 'Login' })"    class="btn-modal-primary">Iniciar sesión</button>
-          <button @click="$router.push({ name: 'Register' })" class="btn-modal-secondary">Registrarse</button>
-        </div>
-        <button @click="showGuestModal = false" class="btn-modal-close">Seguir explorando</button>
-      </div>
-    </div>
+    <!-- Modal para visitantes sin sesión -->
+    <GuestModal v-if="showGuestModal" @close="showGuestModal = false" />
 
-    <div class="recipes-header">
-      <h1>🍽️ Todas las Recetas</h1>
-    </div>
+    <button @click="router.back()" class="btn-back">← Volver</button>
 
-    <!-- Búsqueda -->
-    <div class="search-wrapper">
-      <div class="search-box">
-        <span>🔍</span>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Buscar recetas..."
-          class="search-input"
-        />
-        <button v-if="searchQuery" @click="searchQuery = ''" class="search-clear">✕</button>
-      </div>
-    </div>
-
-    <p v-if="loading">Cargando recetas...</p>
+    <p v-if="loading" class="state-msg">🍳 Cargando receta...</p>
     <p v-else-if="error" class="error">{{ error }}</p>
 
-    <div v-else class="recipes-grid">
-      <div
-        v-for="(recipe, i) in filteredRecipes"
-        :key="recipe.id"
-        class="recipe-card"
-        :style="{ '--card-color': cardColors[i % cardColors.length] }"
-        @click="$router.push(`/recipes/${recipe.id}`)"
-      >
-        <div class="card-top">
-          <div class="card-emoji">{{ categoryEmoji(recipe.category) }}</div>
-          <button class="btn-fav" @click.stop="handleFavorite(recipe)">
-            {{ recipe.isFavorite ? '❤️' : '🤍' }}
-          </button>
+    <div v-else-if="recipe" class="detail-card">
+      <div class="detail-hero">
+        <img
+          v-if="recipe.image_url"
+          :src="recipe.image_url"
+          :alt="recipe.title"
+          class="detail-img"
+        />
+        <div v-else class="detail-img-placeholder">{{ categoryEmoji(recipe.category) }}</div>
+
+        <!-- Badge de categoría sobre la imagen -->
+        <span class="detail-category-badge">{{ recipe.category || 'Sin categoría' }}</span>
+
+        <!-- Botón de favorito -->
+        <button class="btn-fav-detail" @click="handleFavorite">
+          {{ recipe.isFavorite ? '❤️' : '🤍' }}
+        </button>
+      </div>
+
+      <div class="detail-body">
+        <h1 class="detail-title">{{ recipe.title }}</h1>
+        <p class="detail-author">👩‍🍳 Por <strong>{{ recipe.author }}</strong></p>
+        <p class="detail-description">{{ recipe.description }}</p>
+
+        <div class="detail-section">
+          <h3>🥕 Ingredientes</h3>
+          <ul v-if="recipe.ingredients?.length" class="ingredients-list">
+            <li v-for="ing in recipe.ingredients" :key="ing.name">
+              <span class="ing-qty">{{ ing.quantity || '' }}</span>
+              <span class="ing-name">{{ ing.name }}</span>
+            </li>
+          </ul>
+          <p v-else class="no-data">No hay ingredientes registrados.</p>
         </div>
-        <img v-if="recipe.image_url" :src="recipe.image_url" :alt="recipe.title" class="card-img" />
-        <div class="card-body">
-          <span class="card-category">{{ recipe.category || 'Receta' }}</span>
-          <h3 class="card-title">{{ recipe.title }}</h3>
-          <p class="card-desc">{{ recipe.description || 'Sin descripción.' }}</p>
-          <div class="card-footer">
-            <span class="card-author">👩‍🍳 {{ recipe.author }}</span>
-            <span class="card-arrow">→</span>
-          </div>
+
+        <div class="detail-section">
+          <h3>📋 Instrucciones</h3>
+          <p class="instructions">{{ recipe.instructions }}</p>
         </div>
       </div>
-    </div>
-
-    <div v-if="!loading && filteredRecipes.length === 0" class="empty-state">
-      <span>🫙</span>
-      <p>No se encontraron recetas.</p>
     </div>
 
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.store.js'
 import api from '../../services/api.js'
+import GuestModal from '../../components/GuestModal.vue'
 
-const auth           = useAuthStore()
-const recipes        = ref([])
+const route  = useRoute()
+const router = useRouter()
+const auth   = useAuthStore()
+
+const recipe         = ref(null)
 const loading        = ref(true)
 const error          = ref(null)
-const searchQuery    = ref('')
 const showGuestModal = ref(false)
-
-const cardColors = ['#EEE6FF', '#FFEEF3', '#FFF3E8', '#E8F8EF', '#FFF8E8']
-
-const filteredRecipes = computed(() => {
-  if (!searchQuery.value.trim()) return recipes.value
-  const q = searchQuery.value.toLowerCase().trim()
-  return recipes.value.filter(r =>
-    r.title?.toLowerCase().includes(q) ||
-    r.category?.toLowerCase().includes(q) ||
-    r.author?.toLowerCase().includes(q)
-  )
-})
 
 function categoryEmoji(category) {
   const map = {
@@ -104,22 +79,22 @@ function categoryEmoji(category) {
   return map[category] || '🍴'
 }
 
-function handleFavorite(recipe) {
+function handleFavorite() {
   if (!auth.isAuthenticated) {
     showGuestModal.value = true
     return
   }
-  toggleFavorite(recipe)
+  toggleFavorite()
 }
 
-async function toggleFavorite(recipe) {
+async function toggleFavorite() {
   try {
-    if (recipe.isFavorite) {
-      await api.delete(`/recipes/${recipe.id}/favorites`)
-      recipe.isFavorite = false
+    if (recipe.value.isFavorite) {
+      await api.delete(`/recipes/${recipe.value.id}/favorites`)
+      recipe.value.isFavorite = false
     } else {
-      await api.post(`/recipes/${recipe.id}/favorites`)
-      recipe.isFavorite = true
+      await api.post(`/recipes/${recipe.value.id}/favorites`)
+      recipe.value.isFavorite = true
     }
   } catch {
     alert('Error al actualizar favoritos.')
@@ -128,10 +103,10 @@ async function toggleFavorite(recipe) {
 
 onMounted(async () => {
   try {
-    const { data } = await api.get('/recipes')
-    recipes.value = data.data
+    const { data } = await api.get(`/recipes/${route.params.id}`)
+    recipe.value = data.data
   } catch {
-    error.value = 'No se pudieron cargar las recetas.'
+    error.value = 'Receta no encontrada.'
   } finally {
     loading.value = false
   }
@@ -139,54 +114,102 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.recipes-page { max-width: 1100px; margin: 0 auto; padding: 2rem; }
-.recipes-header { margin-bottom: 1.5rem; }
-.recipes-header h1 { font-size: 1.8rem; font-weight: 900; }
+.detail-page { max-width: 800px; margin: 0 auto; padding: 2rem; }
 
-.search-wrapper { margin-bottom: 1.5rem; }
-.search-box {
+.btn-back {
+  background: none;
+  border: 1.5px solid var(--color-border);
+  padding: .5rem 1.1rem;
+  border-radius: 99px;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  color: var(--color-muted);
+  transition: all .2s;
+}
+.btn-back:hover { background: var(--color-primary-light); color: var(--color-primary-dark); }
+
+.detail-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.08);
+  overflow: hidden;
+}
+
+.detail-hero { position: relative; }
+.detail-img { width: 100%; height: 320px; object-fit: cover; display: block; }
+.detail-img-placeholder {
+  width: 100%; height: 200px;
+  background: var(--color-primary-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 5rem;
+}
+
+.detail-category-badge {
+  position: absolute;
+  top: 1rem; left: 1rem;
+  background: white;
+  color: var(--color-primary-dark);
+  font-size: .75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: .3rem .8rem;
+  border-radius: 99px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+
+.btn-fav-detail {
+  position: absolute;
+  top: 1rem; right: 1rem;
+  background: white;
+  border: none;
+  font-size: 1.4rem;
+  border-radius: 99px;
+  width: 46px; height: 46px;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0,0,0,.15);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .2s;
+}
+.btn-fav-detail:hover { transform: scale(1.12); }
+
+.detail-body { padding: 2rem; }
+.detail-title  { font-size: 1.9rem; font-weight: 900; color: var(--color-text); margin-bottom: .4rem; }
+.detail-author { color: var(--color-muted); font-size: .95rem; margin-bottom: 1rem; }
+.detail-description { color: var(--color-muted); line-height: 1.7; margin-bottom: 1.5rem; font-size: 1rem; }
+
+.detail-section { margin-bottom: 1.75rem; }
+.detail-section h3 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin-bottom: .75rem;
+  padding-bottom: .4rem;
+  border-bottom: 2px solid var(--color-primary-light);
+}
+
+.ingredients-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
+.ingredients-list li {
   display: flex;
   align-items: center;
   gap: .75rem;
-  background: var(--color-input);
-  border: 1.5px solid var(--color-border);
-  border-radius: 99px;
-  padding: .6rem 1.25rem;
-  transition: border-color .2s;
+  padding: .6rem 1rem;
+  background: var(--color-primary-light);
+  border-radius: 10px;
+  font-size: .95rem;
 }
-.search-box:focus-within { border-color: var(--color-primary-dark); }
-.search-input { flex: 1; border: none; background: transparent; font-family: 'Nunito', sans-serif; font-size: .95rem; font-weight: 600; color: var(--color-text); outline: none; }
-.search-input::placeholder { color: var(--color-muted); }
-.search-clear { background: none; border: none; color: var(--color-muted); cursor: pointer; font-size: .85rem; padding: .2rem .4rem; border-radius: 99px; }
-.search-clear:hover { background: var(--color-border); }
+.ing-qty  { font-weight: 800; color: var(--color-primary-dark); min-width: 60px; }
+.ing-name { color: var(--color-text); font-weight: 600; }
 
-.recipes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem; }
-.recipe-card { background: var(--card-color, #EEE6FF); border-radius: 20px; overflow: hidden; cursor: pointer; transition: transform .2s, box-shadow .2s; position: relative; }
-.recipe-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,.1); }
-.card-top { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1rem .5rem; }
-.card-emoji { font-size: 2rem; }
-.btn-fav { background: white; border: none; font-size: 1.2rem; border-radius: 99px; width: 34px; height: 34px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.1); display: flex; align-items: center; justify-content: center; }
-.card-img { width: 100%; height: 150px; object-fit: cover; }
-.card-body { padding: 1rem; background: white; margin: .5rem; border-radius: 14px; }
-.card-category { font-size: .72rem; font-weight: 800; color: var(--color-primary-dark); text-transform: uppercase; letter-spacing: .5px; }
-.card-title { font-size: 1.05rem; font-weight: 800; color: var(--color-text); margin: .25rem 0 .4rem; }
-.card-desc { font-size: .83rem; color: var(--color-muted); line-height: 1.4; margin-bottom: .75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.card-footer { display: flex; justify-content: space-between; align-items: center; }
-.card-author { font-size: .8rem; font-weight: 700; color: var(--color-muted); }
-.card-arrow { font-weight: 800; color: var(--color-primary-dark); }
-.empty-state { text-align: center; padding: 3rem; color: var(--color-muted); }
-.empty-state span { font-size: 3rem; display: block; margin-bottom: 1rem; }
-.empty-state p { font-weight: 700; }
-.error { color: red; }
-
-/* Modal */
-.modal-overlay { position: fixed; inset: 0; background: rgba(45,27,78,.45); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 1rem; }
-.modal-card { background: white; border-radius: 20px; padding: 2rem; max-width: 380px; width: 100%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
-.modal-icon { font-size: 2.5rem; display: block; margin-bottom: .75rem; }
-.modal-card h2 { font-size: 1.3rem; font-weight: 900; color: var(--color-text); margin-bottom: .5rem; }
-.modal-card p  { font-size: .9rem; color: var(--color-muted); line-height: 1.5; margin-bottom: 1.5rem; }
-.modal-actions { display: flex; gap: .75rem; margin-bottom: .75rem; }
-.btn-modal-primary { flex: 1; padding: .75rem; background: var(--color-primary-dark); color: white; border: none; border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: .9rem; font-weight: 800; cursor: pointer; }
-.btn-modal-secondary { flex: 1; padding: .75rem; background: var(--color-primary-light); color: var(--color-primary-dark); border: none; border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: .9rem; font-weight: 800; cursor: pointer; }
-.btn-modal-close { width: 100%; background: none; border: none; color: var(--color-muted); font-family: 'Nunito', sans-serif; font-size: .85rem; font-weight: 700; cursor: pointer; padding: .4rem; }
+.instructions {
+  white-space: pre-line;
+  color: var(--color-text);
+  line-height: 1.8;
+  font-size: .97rem;
+}
+.no-data  { color: var(--color-muted); font-style: italic; }
+.state-msg { text-align: center; padding: 3rem; color: var(--color-muted); font-weight: 700; }
+.error    { color: #C0392B; font-weight: 700; padding: 2rem; text-align: center; }
 </style>
