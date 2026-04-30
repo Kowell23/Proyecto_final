@@ -10,22 +10,12 @@ import LoginView    from '../views/auth/LoginView.vue'
 import RegisterView from '../views/auth/RegisterView.vue'
 
 // ── Vistas principales ────────────────────────────────────────────
-// HomeView es el contenedor polimórfico — carga Inicio, Recetas,
-// Favoritas y Perfil internamente sin cambiar la URL.
 import HomeView         from '../views/recipes/HomeView.vue'
 import RecipeDetailView from '../views/recipes/RecipeDetailView.vue'
 import AdminView        from '../views/AdminView.vue'
 
-// ─────────────────────────────────────────────────────────────────
-//  RUTAS — simplificadas gracias al polimorfismo:
-//
-//  Antes:  /home /recipes /favorites /profile  (4 rutas)
-//  Ahora:  /home                               (1 ruta — todo nace aquí)
-//
-//  /recipes/:id sigue teniendo su propia ruta porque
-//  necesita un parámetro dinámico (:id) en la URL.
-// ─────────────────────────────────────────────────────────────────
 const routes = [
+  // La raíz manda al home — accesible sin sesión
   { path: '/', redirect: '/home' },
 
   // ── Familia AUTH (sin navbar ni footer) ───────────────────────
@@ -43,13 +33,11 @@ const routes = [
     path: '/',
     component: MainLayout,
     children: [
-      // Contenedor polimórfico — URL fija, contenido dinámico
-      { path: 'home', name: 'Home', component: HomeView },
-
-      // Detalle de receta — necesita su propia ruta por el :id
+      // PÚBLICA — cualquier visitante entra sin sesión
+      { path: 'home',        name: 'Home',        component: HomeView         },
       { path: 'recipes/:id', name: 'RecipeDetail', component: RecipeDetailView },
 
-      // Admin — exclusiva para rol admin
+      // SOLO ADMIN
       {
         path: 'admin',
         name: 'Admin',
@@ -67,21 +55,29 @@ const router = createRouter({
 })
 
 // ── Navigation Guard ─────────────────────────────────────────────
+// ✅ FIX: con rutas anidadas, to.meta solo lee el meta del padre.
+//    to.matched.some() recorre TODOS los segmentos de la ruta
+//    (padre + hijo) y encuentra el meta correctamente.
 router.beforeEach((to) => {
   const auth = useAuthStore()
 
+  const requiresGuest = to.matched.some(r => r.meta.requiresGuest)
+  const requiresAuth  = to.matched.some(r => r.meta.requiresAuth)
+  const requiresAdmin = to.matched.some(r => r.meta.requiresAdmin)
+
   // 1. Página de auth + ya logueado → Home
-  if (to.meta.requiresGuest && auth.isAuthenticated) {
+  if (requiresGuest && auth.isAuthenticated) {
     return { name: 'Home' }
   }
 
   // 2. Página protegida + sin sesión → Login
-  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+  if (requiresAuth && !auth.isAuthenticated) {
     return { name: 'Login' }
   }
 
-  // 3. Admin + no es admin → Home
-  if (to.meta.requiresAdmin && !auth.isAdmin) {
+  // 3. Página de admin + usuario NO es admin → Home
+  //    Cubre: user normal que escribe /admin en la barra del navegador
+  if (requiresAdmin && !auth.isAdmin) {
     return { name: 'Home' }
   }
 })
