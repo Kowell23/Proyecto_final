@@ -9,25 +9,21 @@ import MainLayout from '../layouts/MainLayout.vue'
 import LoginView    from '../views/auth/LoginView.vue'
 import RegisterView from '../views/auth/RegisterView.vue'
 
-// ── Recetas ───────────────────────────────────────────────────────
+// ── Vistas principales ────────────────────────────────────────────
+// HomeView es el contenedor polimórfico — carga Inicio, Recetas,
+// Favoritas y Perfil internamente sin cambiar la URL.
 import HomeView         from '../views/recipes/HomeView.vue'
-import RecipesView      from '../views/recipes/RecipesView.vue'
 import RecipeDetailView from '../views/recipes/RecipeDetailView.vue'
-import FavoritesView    from '../views/recipes/FavoritesView.vue'
-
-// ── Individuales ──────────────────────────────────────────────────
-import ProfileView from '../views/ProfileView.vue'
-import AdminView   from '../views/AdminView.vue'
+import AdminView        from '../views/AdminView.vue'
 
 // ─────────────────────────────────────────────────────────────────
-//  RUTAS ANIDADAS — dos familias según su layout:
+//  RUTAS — simplificadas gracias al polimorfismo:
 //
-//  AuthLayout  → sin navbar (login, register)
-//  MainLayout  → con navbar + footer (todo lo demás)
+//  Antes:  /home /recipes /favorites /profile  (4 rutas)
+//  Ahora:  /home                               (1 ruta — todo nace aquí)
 //
-//  meta.requiresGuest  → si ya hay sesión activa → redirige a Home
-//  meta.requiresAuth   → si NO hay sesión        → redirige a Login
-//  meta.requiresAdmin  → si NO es admin          → redirige a Home
+//  /recipes/:id sigue teniendo su propia ruta porque
+//  necesita un parámetro dinámico (:id) en la URL.
 // ─────────────────────────────────────────────────────────────────
 const routes = [
   { path: '/', redirect: '/home' },
@@ -37,18 +33,8 @@ const routes = [
     path: '/',
     component: AuthLayout,
     children: [
-      {
-        path: 'login',
-        name: 'Login',
-        component: LoginView,
-        meta: { requiresGuest: true },
-      },
-      {
-        path: 'register',
-        name: 'Register',
-        component: RegisterView,
-        meta: { requiresGuest: true },
-      },
+      { path: 'login',    name: 'Login',    component: LoginView,    meta: { requiresGuest: true } },
+      { path: 'register', name: 'Register', component: RegisterView, meta: { requiresGuest: true } },
     ],
   },
 
@@ -57,17 +43,13 @@ const routes = [
     path: '/',
     component: MainLayout,
     children: [
-      // Públicas — cualquier visitante (guest, user, admin)
-      { path: 'home',        name: 'Home',        component: HomeView         },
-      { path: 'recipes',     name: 'Recipes',     component: RecipesView      },
+      // Contenedor polimórfico — URL fija, contenido dinámico
+      { path: 'home', name: 'Home', component: HomeView },
+
+      // Detalle de receta — necesita su propia ruta por el :id
       { path: 'recipes/:id', name: 'RecipeDetail', component: RecipeDetailView },
 
-      // Protegidas — solo user y admin
-      { path: 'favorites', name: 'Favorites', component: FavoritesView, meta: { requiresAuth: true } },
-      { path: 'profile',   name: 'Profile',   component: ProfileView,   meta: { requiresAuth: true } },
-
-      // Exclusiva — solo admin
-      // requiresAdmin bloquea a cualquier user normal que escriba /admin en la URL
+      // Admin — exclusiva para rol admin
       {
         path: 'admin',
         name: 'Admin',
@@ -85,22 +67,20 @@ const router = createRouter({
 })
 
 // ── Navigation Guard ─────────────────────────────────────────────
-// Se ejecuta ANTES de cargar cualquier ruta. Tres checks en orden:
 router.beforeEach((to) => {
   const auth = useAuthStore()
 
-  // 1. Página de auth + ya logueado → no tiene sentido, manda al Home
+  // 1. Página de auth + ya logueado → Home
   if (to.meta.requiresGuest && auth.isAuthenticated) {
     return { name: 'Home' }
   }
 
-  // 2. Página protegida + sin sesión → manda al Login
+  // 2. Página protegida + sin sesión → Login
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     return { name: 'Login' }
   }
 
-  // 3. Página de admin + role !== 'admin' → manda al Home
-  //    Cubre el caso: user normal escribe /admin en la barra del navegador
+  // 3. Admin + no es admin → Home
   if (to.meta.requiresAdmin && !auth.isAdmin) {
     return { name: 'Home' }
   }
