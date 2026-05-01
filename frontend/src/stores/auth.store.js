@@ -22,6 +22,9 @@ export const useAuthStore = defineStore('auth', () => {
   // ¿Es administrador?
   const isAdmin = computed(() => user.value?.role === 'admin')
 
+  // ¿Es moderador?
+  const isModerator = computed(() => user.value?.role === 'moderator')
+
   // ¿Es usuario normal (no admin)?
   const isUser  = computed(() => user.value?.role === 'user')
 
@@ -73,7 +76,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     token, user,
-    isAuthenticated, isAdmin, isUser, firstName, initials, role,
+    isAuthenticated, isAdmin, isModerator, isUser, firstName, initials, role,
     login, register, logout,
   }
 })

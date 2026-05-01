@@ -47,7 +47,7 @@ export const login = async (req, res, next) => {
     const { email, password } = loginSchema.parse(req.body)
 
     const [rows] = await pool.query(
-      'SELECT id, name, email, password_hash, role FROM users WHERE email = ?',
+      'SELECT id, name, email, password_hash, role, is_banned FROM users WHERE email = ?',
       [email]
     )
 
@@ -59,6 +59,13 @@ export const login = async (req, res, next) => {
     }
 
     const user = rows[0]
+
+    if (user.is_banned) {
+      return res.status(403).json({
+        success: false,
+        message: 'Tu cuenta ha sido baneada. Contacta al administrador.'
+      })
+    }
 
     const isMatch = await bcrypt.compare(password, user.password_hash)
     if (!isMatch) {

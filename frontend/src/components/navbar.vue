@@ -38,9 +38,9 @@
           @click="navigateTo('perfil')"
         >👤 Perfil</button>
 
-        <!-- Solo admin -->
+        <!-- Solo admin y moderador -->
         <button
-          v-if="auth.isAdmin"
+          v-if="auth.isAdmin || auth.isModerator"
           class="nav-link nav-link--admin"
           :class="{ active: route.name === 'Admin' }"
           @click="$router.push({ name: 'Admin' })"
@@ -86,12 +86,9 @@ const nav    = useNavigationStore()
 // Saber si estamos en la ruta /home para activar los links correctos
 const isHome = computed(() => route.name === 'Home')
 
-// Secciones que requieren sesión activa
-const protectedSections = ['favoritas', 'perfil']
-
 function navigateTo(section) {
-  // Si la sección es protegida y no hay sesión → manda al login
-  if (protectedSections.includes(section) && !auth.isAuthenticated) {
+  // Solo perfil requiere sesión obligatoriamente
+  if (section === 'perfil' && !auth.isAuthenticated) {
     router.push({ name: 'Login' })
     return
   }

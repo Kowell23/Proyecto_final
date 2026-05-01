@@ -18,23 +18,23 @@ const routes = [
   // La raíz manda al home — accesible sin sesión
   { path: '/', redirect: '/home' },
 
-  // ── Familia AUTH (sin navbar ni footer) ───────────────────────
+  // ── AUTH: login/register — SOLO para NO logueados, sin navbar/footer
   {
     path: '/',
     component: AuthLayout,
     children: [
-      { path: 'login',    name: 'Login',    component: LoginView,    meta: { requiresGuest: true } },
-      { path: 'register', name: 'Register', component: RegisterView, meta: { requiresGuest: true } },
+      { path: 'login',    name: 'Login',    component: LoginView },
+      { path: 'register', name: 'Register', component: RegisterView },
     ],
   },
 
-  // ── Familia MAIN (con navbar y footer) ────────────────────────
+  // ── MAIN: con navbar y footer — públicas + protegidas
   {
     path: '/',
     component: MainLayout,
     children: [
       // PÚBLICA — cualquier visitante entra sin sesión
-      { path: 'home',        name: 'Home',        component: HomeView         },
+      { path: 'home',        name: 'Home',        component: HomeView },
       { path: 'recipes/:id', name: 'RecipeDetail', component: RecipeDetailView },
 
       // SOLO ADMIN
@@ -54,29 +54,19 @@ const router = createRouter({
   scrollBehavior: () => ({ top: 0 }),
 })
 
-// ── Navigation Guard ─────────────────────────────────────────────
-// ✅ FIX: con rutas anidadas, to.meta solo lee el meta del padre.
-//    to.matched.some() recorre TODOS los segmentos de la ruta
-//    (padre + hijo) y encuentra el meta correctamente.
+// ── Navigation Guard — solo protección, SIN redirect de guest a home
 router.beforeEach((to) => {
   const auth = useAuthStore()
 
-  const requiresGuest = to.matched.some(r => r.meta.requiresGuest)
   const requiresAuth  = to.matched.some(r => r.meta.requiresAuth)
   const requiresAdmin = to.matched.some(r => r.meta.requiresAdmin)
 
-  // 1. Página de auth + ya logueado → Home
-  if (requiresGuest && auth.isAuthenticated) {
-    return { name: 'Home' }
-  }
-
-  // 2. Página protegida + sin sesión → Login
+  // 1. Página protegida + sin sesión → Login
   if (requiresAuth && !auth.isAuthenticated) {
     return { name: 'Login' }
   }
 
-  // 3. Página de admin + usuario NO es admin → Home
-  //    Cubre: user normal que escribe /admin en la barra del navegador
+  // 2. Página de admin + usuario NO es admin → Home
   if (requiresAdmin && !auth.isAdmin) {
     return { name: 'Home' }
   }

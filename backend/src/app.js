@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import { errorHandler } from './middlewares/error.middleware.js'
 import authRoutes from './modules/auth/auth.routes.js'
 import recipeRoutes from './modules/recipes/recipes.routes.js'
+import userRoutes from './modules/users/users.routes.js'
 
 dotenv.config()
 
@@ -18,6 +19,7 @@ app.use(express.json())
 
 app.use('/api/auth', authRoutes)
 app.use('/api/recipes', recipeRoutes)
+app.use('/api/users', userRoutes)
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', project: 'Recetas de Cocina API', version: '1.0.0' })

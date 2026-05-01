@@ -21,8 +21,8 @@ router.get('/:id',                 getRecipeById)
 router.post('/:id/favorites',      addFavorite)
 router.delete('/:id/favorites',    removeFavorite)
 
-router.post('/',      authorizeRole('admin'), createRecipe)
-router.put('/:id',    authorizeRole('admin'), updateRecipe)
-router.delete('/:id', authorizeRole('admin'), deleteRecipe)
+router.post('/',      authorizeRole('admin', 'moderator'), createRecipe)
+router.put('/:id',    authorizeRole('admin', 'moderator'), updateRecipe)
+router.delete('/:id', authorizeRole('admin', 'moderator'), deleteRecipe)
 
 export default router

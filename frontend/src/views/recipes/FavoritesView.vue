@@ -1,5 +1,7 @@
 <template>
   <div class="favorites-page">
+    <GuestModal v-if="showGuestModal" @close="showGuestModal = false" />
+
     <section class="page-hero">
       <div class="container">
         <h1>❤️ Mis Favoritas</h1>
@@ -17,7 +19,6 @@
           <button @click="$router.push('/home')" class="btn-explore">Explorar recetas ✨</button>
         </div>
 
-        <!-- ✅ RecipeCard llamado — sin repetir el HTML -->
         <div v-else class="recipes-grid">
           <RecipeCard
             v-for="(recipe, i) in favorites"
@@ -34,15 +35,25 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '../../services/api.js'
+import { useAuthStore } from '../../stores/auth.store.js'
+import GuestModal from '../../components/GuestModal.vue'
 import RecipeCard from '../../components/RecipeCard.vue'
 
-const favorites  = ref([])
-const loading    = ref(true)
+const router = useRouter()
+const auth = useAuthStore()
+
+const favorites = ref([])
+const loading = ref(true)
+const showGuestModal = ref(false)
 const CARD_COLORS = ['#EEE6FF', '#FFEEF3', '#FFF3E8', '#E8F8EF', '#FFF8E8']
 
-// En favoritas, al hacer toggle se remueve de la lista localmente
 async function removeFavorite(recipe) {
+  if (!auth.isAuthenticated) {
+    showGuestModal.value = true
+    return
+  }
   try {
     await api.delete(`/recipes/${recipe.id}/favorites`)
     favorites.value = favorites.value.filter(r => r.id !== recipe.id)
@@ -50,9 +61,16 @@ async function removeFavorite(recipe) {
 }
 
 onMounted(async () => {
+  if (!auth.isAuthenticated) {
+    showGuestModal.value = true
+    loading.value = false
+    return
+  }
   try {
     const { data } = await api.get('/recipes/favorites')
     favorites.value = data.data
+  } catch {
+    router.push({ name: 'Login' })
   } finally {
     loading.value = false
   }

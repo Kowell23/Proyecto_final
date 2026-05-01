@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
   name          VARCHAR(100)  NOT NULL,
   email         VARCHAR(150)  NOT NULL UNIQUE,
   password_hash VARCHAR(255)  NOT NULL,
-  role          ENUM('admin', 'user') NOT NULL DEFAULT 'user',
+  role          ENUM('admin', 'moderator', 'user') NOT NULL DEFAULT 'user',
+  is_banned     BOOLEAN DEFAULT FALSE,
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -51,9 +52,11 @@ CREATE TABLE IF NOT EXISTS favorites (
 );
 
 -- ─── DATOS DE PRUEBA ─────────────────────────────────────────
--- Contraseña: Admin123! (hash generado con bcrypt, saltRounds=10)
+-- Contraseña: admin123 (hash generado con bcrypt, saltRounds=10)
 INSERT IGNORE INTO users (name, email, password_hash, role) VALUES
-('Admin', 'admin@recetas.com', '$2a$10$YqK9VZu2DMd.PxhN1sK3rO6dEJ5s.XwPe5aBVtBH6PKQU2K3t.U5e', 'admin');
+('Admin', 'admin@recetas.com', '$2a$10$ljK0NvYqrhz.5iURdSkcbueJkV6P1RtmYrUI14fn0oEB7uZPFZiVa', 'admin'),
+('Moderador', 'mod@recetas.com', '$2a$10$ljK0NvYqrhz.5iURdSkcbueJkV6P1RtmYrUI14fn0oEB7uZPFZiVa', 'moderator'),
+('Usuario Prueba', 'prueba123@prueba.com', '$2a$10$ljK0NvYqrhz.5iURdSkcbueJkV6P1RtmYrUI14fn0oEB7uZPFZiVa', 'admin');
 
 -- Ingredientes base
 INSERT IGNORE INTO ingredients (name) VALUES
