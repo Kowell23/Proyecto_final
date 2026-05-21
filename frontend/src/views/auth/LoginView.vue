@@ -45,7 +45,7 @@
 
       <!-- ✅ Botón para explorar sin cuenta -->
       <!-- Navega a /home que es una ruta pública — no requiere sesión -->
-      <button @click="$router.push({ name: 'Home' })" class="btn-explore">
+      <button @click="guestExplore" class="btn-explore">
         👀 Explorar sin registrarse
       </button>
 
@@ -63,13 +63,20 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 // ✅ Import corregido: LoginView está en views/auth/ → necesita dos niveles arriba
 import { useAuthStore } from '../../stores/auth.store.js'
+import { useNavigationStore } from '../../stores/navigation.store.js'
 
 const router    = useRouter()
 const authStore = useAuthStore()
+const nav       = useNavigationStore()
 
 const form     = ref({ email: '', password: '' })
 const loading  = ref(false)
 const errorMsg = ref('')
+
+function guestExplore() {
+  nav.goTo('inicio')
+  router.push({ name: 'Home' })
+}
 
 async function handleLogin() {
   errorMsg.value = ''
