@@ -1,108 +1,106 @@
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
-import pool from '../../config/db.js'
-import { registerSchema, loginSchema } from '../../validators/auth.validator.js'
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import pool from "../../config/db.js";
 
-export const register = async (req, res, next) => {
+export const register = async (req, res) => {
   try {
-    const { name, email, password } = registerSchema.parse(req.body)
+    const { name, email, password } = req.body;
 
     const [existing] = await pool.query(
-      'SELECT id FROM users WHERE email = ?',
+      "SELECT id FROM users WHERE email = ?",
       [email]
-    )
+    );
+
     if (existing.length > 0) {
-      return res.status(409).json({
-        success: false,
-        message: 'Ya existe una cuenta con ese email.'
-      })
+      return res.status(400).json({
+        message: "El correo ya existe",
+      });
     }
 
-    const password_hash = await bcrypt.hash(password, 10)
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const [result] = await pool.query(
-      'INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)',
-      [name, email, password_hash]
-    )
+      `
+      INSERT INTO users (name, email, password_hash)
+      VALUES (?, ?, ?)
+      `,
+      [name, email, hashedPassword]
+    );
 
-    const token = jwt.sign(
-      { id: result.insertId, email, role: 'user' },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    )
+    console.log("🟢 Usuario registrado:", email);
 
     res.status(201).json({
-      success: true,
-      message: 'Usuario registrado correctamente.',
-      token,
-      user: { id: result.insertId, name, email, role: 'user' }
-    })
+      message: "Usuario registrado correctamente",
+      userId: result.insertId,
+    });
   } catch (error) {
-    next(error) 
+    console.error(error);
+
+    res.status(500).json({
+      message: "Error registrando usuario",
+    });
   }
-}
+};
 
-export const login = async (req, res, next) => {
+export const login = async (req, res) => {
   try {
-    const { email, password } = loginSchema.parse(req.body)
+    const { email, password } = req.body;
 
-    const [rows] = await pool.query(
-      'SELECT id, name, email, password_hash, role, is_banned FROM users WHERE email = ?',
+    const [users] = await pool.query(
+      "SELECT * FROM users WHERE email = ?",
       [email]
-    )
+    );
 
-    if (rows.length === 0) {
+    if (users.length === 0) {
+      console.log("🔴 Usuario no encontrado:", email);
+
       return res.status(401).json({
-        success: false,
-        message: 'Credenciales incorrectas.'
-      })
+        message: "Credenciales inválidas",
+      });
     }
 
-    const user = rows[0]
+    const user = users[0];
 
-    if (user.is_banned) {
-      return res.status(403).json({
-        success: false,
-        message: 'Tu cuenta ha sido baneada. Contacta al administrador.'
-      })
-    }
+    const validPassword = await bcrypt.compare(
+      password,
+      user.password_hash
+    );
 
-    const isMatch = await bcrypt.compare(password, user.password_hash)
-    if (!isMatch) {
+    if (!validPassword) {
+      console.log("🔴 Contraseña incorrecta:", email);
+
       return res.status(401).json({
-        success: false,
-        message: 'Credenciales incorrectas.'
-      })
+        message: "Credenciales inválidas",
+      });
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
+      {
+        id: user.id,
+        role: user.role,
+      },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    )
+      {
+        expiresIn: process.env.JWT_EXPIRES_IN
+      }
+    );
+
+    console.log("🟢 Usuario inició sesión:", user.email);
 
     res.json({
-      success: true,
-      message: 'Login exitoso.',
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role }
-    })
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
   } catch (error) {
-    next(error)
-  }
-}
+    console.error(error);
 
-export const getMe = async (req, res, next) => {
-  try {
-    const [rows] = await pool.query(
-      'SELECT id, name, email, role, created_at FROM users WHERE id = ?',
-      [req.user.id]
-    )
-    if (rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Usuario no encontrado.' })
-    }
-    res.json({ success: true, user: rows[0] })
-  } catch (error) {
-    next(error)
+    res.status(500).json({
+      message: "Error iniciando sesión",
+    });
   }
-}
+};

@@ -4,14 +4,25 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 const pool = mysql.createPool({
-  host:     process.env.DB_HOST,
-  user:     process.env.DB_USER,
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  port:     Number(process.env.DB_PORT) || 3306,
+  port: process.env.DB_PORT,
   waitForConnections: true,
-  connectionLimit:    10,
-  queueLimit:         0
+  connectionLimit: 10
 })
+
+try {
+  const connection = await pool.getConnection()
+
+  console.log('✅ MySQL conectado correctamente')
+  console.log(`🛢️ Base de datos: ${process.env.DB_NAME}`)
+
+  connection.release()
+} catch (error) {
+  console.error('❌ Error MySQL:')
+  console.error(error.message)
+}
 
 export default pool

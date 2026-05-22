@@ -26,7 +26,6 @@ export const recipeSchema = z.object({
     .max(100)
     .optional(),
 
-  // Array de ingredientes con su cantidad
   ingredients: z
     .array(z.object({
       name:     z.string().min(1, 'El nombre del ingrediente es obligatorio'),

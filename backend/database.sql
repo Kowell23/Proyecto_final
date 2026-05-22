@@ -58,20 +58,17 @@ INSERT IGNORE INTO users (name, email, password_hash, role) VALUES
 ('Moderador', 'mod@recetas.com', '$2a$10$ljK0NvYqrhz.5iURdSkcbueJkV6P1RtmYrUI14fn0oEB7uZPFZiVa', 'moderator'),
 ('Usuario Prueba', 'prueba123@prueba.com', '$2a$10$ljK0NvYqrhz.5iURdSkcbueJkV6P1RtmYrUI14fn0oEB7uZPFZiVa', 'admin');
 
--- Ingredientes base
 INSERT IGNORE INTO ingredients (name) VALUES
 ('Arroz'), ('Pollo'), ('Cebolla'), ('Ajo'), ('Tomate'),
 ('Sal'), ('Pimienta'), ('Aceite de oliva'), ('Huevo'), ('Leche'),
 ('Harina'), ('Azúcar'), ('Mantequilla'), ('Zanahoria'), ('Papa'),
 ('Cilantro'), ('Limón'), ('Aguacate'), ('Fríjoles'), ('Plátano');
 
--- Receta de ejemplo
 INSERT IGNORE INTO recipes (title, description, instructions, category, created_by) VALUES
 ('Arroz con Pollo', 'Clásico plato colombiano fácil de preparar.',
  '1. Sofría el pollo con cebolla y ajo.\n2. Agregue el arroz y el agua.\n3. Cocine a fuego medio por 20 minutos.',
  'Platos Principales', 1);
 
--- Ingredientes de la receta de ejemplo
 INSERT IGNORE INTO recipe_ingredients (recipe_id, ingredient_id, quantity) VALUES
 (1, 1, '2 tazas'),   -- Arroz
 (1, 2, '500g'),      -- Pollo
